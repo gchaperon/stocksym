@@ -3,7 +3,7 @@
 # from random import random
 from dataclasses import dataclass, field
 # from datetime import timedelta, datetime
-import datetime
+from datetime import datetime, timedelta
 from functools import partial
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,13 +18,11 @@ class Stock:
     Esta clase representa un stock, los campos son utilizados para generar
     el precio del stock en el tiempo
     """
-    # mu: float = field(default_factory=partial(np.random.normal, scale=2e-3))
     mu: float = 0.
     sigma: float = field(default_factory=partial(np.random.normal, scale=5e-3))
-    # sigma: float = 0.
     dt: float = 1.  # esto representa dias
     x0: float = field(default_factory=partial(np.random.gamma, shape=50.))
-    t0: datetime.datetime = field(default=datetime.datetime(2010, 1, 1))
+    t0: datetime = field(default=datetime(2010, 1, 1))
     prices: np.ndarray = field(default_factory=lambda: np.array([]))
     _b: np.ndarray = field(default_factory=lambda: np.array([]))
 
@@ -53,14 +51,14 @@ class Stock:
         Lazily computes de values for the prices, which depend on the random
         variables stored in _b
         """
-        if not isinstance(date, datetime.datetime):
+        if not isinstance(date, datetime):
             raise TypeError(
-                f"Date should be of type datetime.datetime, got {type(date)}"
+                f"Date should be of type datetime, got {type(date)}"
             )
         if date < self.t0:
             raise Exception(f"Date shouldn't be less than {self.t0}")
 
-        pos = int((date - self.t0) / datetime.timedelta(days=self.dt))
+        pos = int((date - self.t0) / timedelta(days=self.dt))
         if len(self._b) < pos:
             self._b = np.concatenate((
                 self._b,
@@ -77,7 +75,7 @@ class Stock:
 
     def prices_range(self, date1, date2):
         # ipdb.set_trace()
-        dt = datetime.timedelta(days=self.dt)
+        dt = timedelta(days=self.dt)
         n = int((date2 - date1) / dt)
 
         # print(n)
@@ -86,28 +84,41 @@ class Stock:
 
 
 class Portfolio:
-    def __init__(self, stocks=None):
+    def __init__(self, stocks=None, **stock_kwargs):
         if stocks is None:
-            self.stocks = [Stock() for i in range(random.randrange(5, 10))]
+            self.stocks = [Stock(**stock_kwargs) for i in range(random.randrange(5, 10))]
         else:
             if not all(isinstance(stock, Stock) for stock in stocks):
                 raise Exception("All stocks should be of type Stock")
             self.stocks = stocks
 
-    def profit(self, date1, date2):
+    def profit(self, date1, date2, annualized=False):
         """
-        Return the profit of the portfolio between two dates as a percentage
+        Return the profit of the portfolio between two dates
         """
-        if not isinstance(date1, datetime.datetime) or not isinstance(date2, datetime.datetime):
-            raise TypeError(
-                f"Dates should be of type datetime.datetime"
-            )
-        value1 = sum(stock.price(date1) for stock in self.stocks)
-        value2 = sum(stock.price(date2) for stock in self.stocks)
+        if date2 < date1:
+            raise Exception("The second date must come after the first")
 
-        return (value2 - value1) / value1 * 100
+        value1 = self.price(date1)
+        value2 = self.price(date2)
+        overall = (value2 - value1) / value1
+        if annualized:
+            year = timedelta(days=365)
+            dt = date2 - date1
+            return (1 + overall) ** (year/dt) - 1
+        return overall
+
+    def price(self, date):
+        if not isinstance(date, datetime):
+            raise TypeError(
+                f"Date should be of type datetime, got {type(date)}"
+            )
+        return sum(stock.price(date) for stock in self.stocks)
 
     def _show_graph(self, date1, date2):
+        """
+        TODO: esto tiene un bug, si los dt de los stocks son distintos se cae
+        """
         # ipdb.set_trace()
         p = self.stocks[0].prices_range(date1, date2)
         for stock in self.stocks[1:]:
@@ -119,7 +130,7 @@ class Portfolio:
 def main():
     # s = Stock()
     # tic = time.time()
-    # print(s.price(datetime.datetime(2010, 1, 2)))
+    # print(s.price(datetime(2010, 1, 2)))
     # toc = time.time()
     # print(f"primera ejecucion {toc-tic}s")
     # s._show_graph()
@@ -127,19 +138,19 @@ def main():
     # times = []
     # for i in range(20):
     #     tic = time.time()
-    #     s.price(datetime.datetime(random.randrange(2010, 2100), 1, 1))
+    #     s.price(datetime(random.randrange(2010, 2100), 1, 1))
     #     toc = time.time()
     #     times.append(toc-tic)
     # print(f"promedio de 20 ejecuciones posteriores {np.mean(times)}s")
 
-
-    # s.price(datetime.datetime(2010, 4, 1))
+    # s.price(datetime(2010, 4, 1))
     # s._show_graph()
 
-    p = Portfolio()
-    d1 = datetime.datetime(2018, 1, 1)
-    d2 = datetime.datetime(2019, 1, 1)
-    print(f"ganancia de {p.profit(d1, d2)}%")
+    p = Portfolio(dt=1)
+    d1 = datetime(2018, 1, 1)
+    d2 = datetime(2018, 3, 1)
+    print(f"ganancia de {p.profit(d1, d2)*100:.2f}%")
+    print(f"annualized {p.profit(d1, d2, annualized=True)*100:.2f}%")
     p._show_graph(d1, d2)
 
 

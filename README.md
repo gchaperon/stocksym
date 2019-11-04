@@ -11,4 +11,6 @@ Recursos que revise para hacer este mini proyecto, sin ningun orden particular:
 * https://en.wikipedia.org/wiki/Geometric_Brownian_motion
 * https://en.wikipedia.org/wiki/Wiener_process
 * https://www.youtube.com/watch?v=74PcBXPsrvc
-* https://towardsdatascience.com/simulating-stock-prices-in-python-using-geometric-brownian-motion-8dfd6e8c6b18 
+* https://towardsdatascience.com/simulating-stock-prices-in-python-using-geometric-brownian-motion-8dfd6e8c6b18
+* https://www.wikihow.com/Calculate-Annualized-Portfolio-Return
+* https://www.investopedia.com/terms/a/annualized-total-return.asp
