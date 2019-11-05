@@ -1,22 +1,19 @@
 #! /usr/bin/env python3
-
-# from random import random
-from dataclasses import dataclass, field
-# from datetime import timedelta, datetime
-from datetime import datetime, timedelta
-from functools import partial
-import numpy as np
-import matplotlib.pyplot as plt
-import time
 import random
-# import ipdb
+import numpy as np
+from functools import partial
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 
 
 @dataclass
 class Stock:
     """
-    Esta clase representa un stock, los campos son utilizados para generar
-    el precio del stock en el tiempo
+    This class represents a stock, each field is needed to generate the
+    model for the price over time.
+
+    It is made as a dataclass because I wanted to try them out (it is a new
+    feature introduced in 3.7) and I figured this would be a nice opportunity
     """
     mu: float = 0.
     sigma: float = field(default_factory=partial(np.random.normal, scale=5e-3))
@@ -25,22 +22,6 @@ class Stock:
     t0: datetime = field(default=datetime(2010, 1, 1))
     prices: np.ndarray = field(default_factory=lambda: np.array([]))
     _b: np.ndarray = field(default_factory=lambda: np.array([]))
-
-    # def __init__(self, mu=None, sigma=None, **kwargs):
-    #     self.mu = mu if mu else np.random.normal(scale=2e-3)
-    #     ...
-
-    def _show_graph(self):
-        """
-        Plots a graph with the current state of the historic prices. Note  that
-        the graph shown depends on the last price() execution that added more
-        prices.
-
-        I use this method mainly to check how the prices of the stock look
-        over time and adjust paramters.
-        """
-        plt.plot(self.prices)
-        plt.show()
 
     def price(self, date):
         """
@@ -64,7 +45,7 @@ class Stock:
                 self._b,
                 np.random.normal(
                     scale=np.sqrt(self.dt),
-                    size=(2*pos-len(self._b))  # calcular algunos extra
+                    size=(2*pos-len(self._b))  # compute some extra
                 )
             ))
             step = np.exp((self.mu - self.sigma**2/2) * self.dt) \
@@ -72,15 +53,6 @@ class Stock:
             self.prices = self.x0 * step.cumprod()
 
         return self.x0 if pos == 0 else self.prices[pos-1]
-
-    def prices_range(self, date1, date2):
-        # ipdb.set_trace()
-        dt = timedelta(days=self.dt)
-        n = int((date2 - date1) / dt)
-
-        # print(n)
-        dates = (date1 + dt * i for i in range(n))
-        return np.array([self.price(date) for date in dates])
 
 
 class Portfolio:
@@ -94,7 +66,18 @@ class Portfolio:
 
     def profit(self, date1, date2, annualized=False):
         """
-        Return the profit of the portfolio between two dates
+        Return the profit of the portfolio between two dates, if annualized
+        is True, it returns the annualized value.
+
+        It is important to note that since the timedelta object in python
+        has only a resolution of days, some results may be unintuitively a bit
+        off.
+        In practice, let date1=datetime(2019,1,1) (janaury first, 2019) and
+        date2=datetime(2019,7,1) (july first, 2019), that is, one semester
+        apart, and let 'p' be the profit between these two dates. One may
+        think intuitively that since a year is 2 semesters, the annualized
+        profit would be just (1+p)**2 - 1. This does not hold true, because
+        timedelta(days=356)/(date2-date1) is not exactly 2, but rather 2.017
         """
         if date2 < date1:
             raise Exception("The second date must come after the first")
@@ -109,49 +92,31 @@ class Portfolio:
         return overall
 
     def price(self, date):
+        """
+        I used this function to avoid repeating some code and also it might
+        be useful to plot the hole portfolio between two dates
+        """
         if not isinstance(date, datetime):
             raise TypeError(
                 f"Date should be of type datetime, got {type(date)}"
             )
         return sum(stock.price(date) for stock in self.stocks)
 
-    def _show_graph(self, date1, date2):
-        """
-        TODO: esto tiene un bug, si los dt de los stocks son distintos se cae
-        """
-        # ipdb.set_trace()
-        p = self.stocks[0].prices_range(date1, date2)
-        for stock in self.stocks[1:]:
-            p += stock.prices_range(date1, date2)
-        plt.plot(p)
-        plt.show()
-
 
 def main():
-    # s = Stock()
-    # tic = time.time()
-    # print(s.price(datetime(2010, 1, 2)))
-    # toc = time.time()
-    # print(f"primera ejecucion {toc-tic}s")
-    # s._show_graph()
+    """
+    Example usage of the classes implemented
+    """
+    p = Portfolio()
+    d1 = datetime(2018, 1, 1)  # january 1st, 2018
+    d2 = datetime(2018, 2, 1)  # february 1st, 2018
+    profit = p.profit(d1, d2)
+    a_profit = p.profit(d1, d2, annualized=True)
 
-    # times = []
-    # for i in range(20):
-    #     tic = time.time()
-    #     s.price(datetime(random.randrange(2010, 2100), 1, 1))
-    #     toc = time.time()
-    #     times.append(toc-tic)
-    # print(f"promedio de 20 ejecuciones posteriores {np.mean(times)}s")
-
-    # s.price(datetime(2010, 4, 1))
-    # s._show_graph()
-
-    p = Portfolio(dt=1)
-    d1 = datetime(2018, 1, 1)
-    d2 = datetime(2018, 3, 1)
-    print(f"ganancia de {p.profit(d1, d2)*100:.2f}%")
-    print(f"annualized {p.profit(d1, d2, annualized=True)*100:.2f}%")
-    p._show_graph(d1, d2)
+    print(f"The profit between {d1} and {d2} is {profit*100:.2f}%")
+    print(
+        f"The annualized profit between {d1} and {d2} is {a_profit*100:.2f}%"
+    )
 
 
 if __name__ == '__main__':
