@@ -1,6 +1,19 @@
 # stocksym
 Mini proyecto para postular a Fintual, ver https://fintual.cl/steve/desarrollador
 
+# Como correr
+En el archivo stocksym.py se encuentran las clases Stock y Portfolio con los
+metodos esspecificado en el proceso de postulacion.
+El modulo stocksym ocupa numpy asique es necesario tenerlo instalado para poder
+correrlo.
+
+Las clases se pueden importar del modulo, pero tambien se puede correr un ejemplo
+con
+```shell
+python3 stocksym.py
+```
+
+
 # Mis Notas
 Recursos que revise para hacer este mini proyecto, sin ningun orden particular:
 
