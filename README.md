@@ -10,7 +10,7 @@ correrlo.
 Las clases se pueden importar del modulo, pero tambien se puede correr un ejemplo
 con
 ```shell
-python3 stocksym.py
+$ python3 stocksym.py
 ```
 
 
