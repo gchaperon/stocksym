@@ -94,7 +94,7 @@ class Portfolio:
     def price(self, date):
         """
         I used this function to avoid repeating some code and also it might
-        be useful to plot the hole portfolio between two dates
+        be useful to plot the whole portfolio between two dates
         """
         if not isinstance(date, datetime):
             raise TypeError(

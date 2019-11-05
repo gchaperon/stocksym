@@ -6,7 +6,7 @@ Este proyeto requiere python 3.7
 
 
 En el archivo stocksym.py se encuentran las clases Stock y Portfolio con los
-metodos esspecificado en el proceso de postulacion.
+metodos especificado en el proceso de postulación.
 
 
 El modulo stocksym ocupa numpy asique es necesario tenerlo instalado para poder
